@@ -678,8 +678,12 @@ process.on('unhandledRejection', (err) => {
   console.error('Unhandled rejection:', err.message || err);
 });
 
-app.listen(PORT, () => {
-  console.log(`Swoosh Macro Intelligence running at http://localhost:${PORT}`);
-  console.log(`Gemini model: ${GEMINI_MODEL}`);
-  console.log(`Gemini key: ${GEMINI_API_KEY.slice(0, 10)}...`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Swoosh Macro Intelligence running at http://localhost:${PORT}`);
+    console.log(`Gemini model: ${GEMINI_MODEL}`);
+    console.log(`Gemini key: ${GEMINI_API_KEY.slice(0, 10)}...`);
+  });
+}
+
+module.exports = app;
