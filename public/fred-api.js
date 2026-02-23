@@ -1,10 +1,8 @@
 const FRED = (() => {
   const API_KEY = '98a1be06f9fa0a9aefa91e1dbaa888bb';
-  const DIRECT_BASE = 'https://api.stlouisfed.org/fred';
-  const PROXY_BASE = '/api/fred';
+  const BASE = '/api/fred';
   const cache = new Map();
   const CACHE_TTL = 3600000; // 1 hour
-  let useDirect = !window.location.hostname.includes('localhost');
 
   const S = (id, name, unit, decimals, freq, opts) => ({id, name, unit, decimals, freq, ...opts});
   const SERIES = {
@@ -83,12 +81,8 @@ const FRED = (() => {
   };
 
   function buildUrl(endpoint, params) {
-    if (useDirect) {
-      const qs = new URLSearchParams({ ...params, api_key: API_KEY, file_type: 'json' });
-      return `${DIRECT_BASE}/${endpoint}?${qs.toString()}`;
-    }
     const qs = new URLSearchParams({ _endpoint: endpoint, ...params });
-    return `${PROXY_BASE}?${qs.toString()}`;
+    return `${BASE}?${qs.toString()}`;
   }
 
   async function fetchSeries(seriesId, opts = {}) {
