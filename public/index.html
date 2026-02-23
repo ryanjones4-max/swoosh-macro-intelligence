@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swoosh Macro Intelligence</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230b0e14'/><polyline points='4,24 10,18 16,20 22,10 28,6' fill='none' stroke='%2338bdf8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/><circle cx='28' cy='6' r='2' fill='%2322c55e'/></svg>">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+</head>
+<body>
+  <div id="splash-screen" class="splash">
+    <div class="splash-particles"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="splash-inner">
+      <div class="splash-glow"></div>
+      <svg class="splash-logo" viewBox="0 0 64 64" width="72" height="72">
+        <rect width="64" height="64" rx="14" fill="#0b0e14" stroke="#1e293b" stroke-width="1"/>
+        <polyline class="splash-line" points="8,48 20,36 32,40 44,20 56,12" fill="none" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle class="splash-dot" cx="56" cy="12" r="3.5" fill="#22c55e"/>
+      </svg>
+      <h2 class="splash-title">Swoosh Macro Intelligence</h2>
+      <p class="splash-sub">Loading today's data & AI insights</p>
+      <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+    </div>
+  </div>
+  <div id="app" class="behind-splash">
+    <header class="top-bar">
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 32 32" width="28" height="28"><rect width="32" height="32" rx="6" fill="#0b0e14"/><polyline points="4,24 10,18 16,20 22,10 28,6" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="28" cy="6" r="2" fill="#22c55e"/></svg>
+        <h1 id="dashboard-title">US Economy</h1>
+      </div>
+      <div class="scope-toggle" id="scope-toggle">
+        <button class="scope-btn active" data-scope="us"><span class="material-icons-outlined">flag</span>United States</button>
+        <button class="scope-btn" data-scope="global"><span class="material-icons-outlined">public</span>Global</button>
+        <button class="scope-btn" data-scope="industry"><span class="material-icons-outlined">checkroom</span>Industry</button>
+      </div>
+      <div class="header-meta">
+        <button class="morning-news-btn" id="morning-news-btn" title="Listen to today's AI-generated morning briefing">
+          <span class="material-icons-outlined">podcasts</span>
+          <span class="mn-label">The Morning Macro</span>
+        </button>
+        <span class="ai-status-dot" id="ai-status-dot"></span>
+        <span id="last-updated">Loading...</span>
+      </div>
+    </header>
+
+    <div class="ticker-wrap" id="ticker-wrap">
+      <div class="ticker" id="ticker-tape"></div>
+    </div>
+
+    <nav class="tab-bar" id="tab-bar" data-scope="us">
+      <button class="tab active" data-tab="dailyread">
+        <span class="material-icons-outlined">auto_stories</span>Daily Read
+      </button>
+      <button class="tab" data-tab="overview">
+        <span class="material-icons-outlined">dashboard</span>Overview
+      </button>
+      <button class="tab" data-tab="youth">
+        <span class="material-icons-outlined">storefront</span>Industry Overview
+      </button>
+      <button class="tab" data-tab="growth">
+        <span class="material-icons-outlined">trending_up</span>Growth &amp; Output
+      </button>
+      <button class="tab" data-tab="labor">
+        <span class="material-icons-outlined">groups</span>Labor Market
+      </button>
+      <button class="tab" data-tab="inflation">
+        <span class="material-icons-outlined">local_fire_department</span>Inflation
+      </button>
+      <button class="tab" data-tab="rates">
+        <span class="material-icons-outlined">account_balance</span>Rates &amp; Policy
+      </button>
+      <button class="tab" data-tab="markets">
+        <span class="material-icons-outlined">candlestick_chart</span>Markets
+      </button>
+      <button class="tab" data-tab="consumer">
+        <span class="material-icons-outlined">shopping_cart</span>Consumer &amp; Business
+      </button>
+      <button class="tab" data-tab="housing">
+        <span class="material-icons-outlined">house</span>Housing
+      </button>
+      <button class="tab" data-tab="population">
+        <span class="material-icons-outlined">people</span>Population &amp; Migration
+      </button>
+      <button class="tab" data-tab="events">
+        <span class="material-icons-outlined">event_note</span>Key Events
+      </button>
+      <button class="tab" data-tab="headlines">
+        <span class="material-icons-outlined">newspaper</span>Headlines
+      </button>
+    </nav>
+
+    <nav class="tab-bar" id="tab-bar-industry" data-scope="industry" style="display:none">
+      <button class="tab active" data-tab="i-trends">
+        <span class="material-icons-outlined">insights</span>Macro Trends
+      </button>
+      <button class="tab" data-tab="i-footwear">
+        <span class="material-icons-outlined">directions_run</span>Footwear
+      </button>
+      <button class="tab" data-tab="i-apparel">
+        <span class="material-icons-outlined">checkroom</span>Apparel
+      </button>
+      <button class="tab" data-tab="i-color">
+        <span class="material-icons-outlined">palette</span>Color &amp; Material
+      </button>
+      <button class="tab" data-tab="i-consumer">
+        <span class="material-icons-outlined">person</span>Consumer
+      </button>
+    </nav>
+
+    <nav class="tab-bar" id="tab-bar-global" data-scope="global" style="display:none">
+      <button class="tab active" data-tab="g-dailyread">
+        <span class="material-icons-outlined">auto_stories</span>Daily Read
+      </button>
+      <button class="tab" data-tab="g-overview">
+        <span class="material-icons-outlined">language</span>Overview
+      </button>
+      <button class="tab" data-tab="g-commodities">
+        <span class="material-icons-outlined">oil_barrel</span>Commodities
+      </button>
+      <button class="tab" data-tab="g-fx">
+        <span class="material-icons-outlined">currency_exchange</span>Currencies
+      </button>
+      <button class="tab" data-tab="g-headlines">
+        <span class="material-icons-outlined">newspaper</span>Headlines
+      </button>
+    </nav>
+
+    <main class="dashboard" id="dashboard">
+      <!-- Content injected by JS -->
+    </main>
+
+    <div class="podcast-overlay" id="podcast-overlay">
+      <div class="podcast-player">
+        <div class="podcast-header">
+          <div class="podcast-branding">
+            <span class="material-icons-outlined podcast-icon">podcasts</span>
+            <div>
+              <h2 class="podcast-title">The Morning Macro</h2>
+              <p class="podcast-subtitle" id="podcast-date"></p>
+            </div>
+          </div>
+          <div class="podcast-header-actions">
+            <button class="podcast-collapse-btn" id="podcast-collapse" title="Minimize"><span class="material-icons-outlined">expand_more</span></button>
+            <button class="podcast-close-btn" id="podcast-close" title="Close &amp; stop"><span class="material-icons-outlined">close</span></button>
+          </div>
+        </div>
+        <div class="podcast-now-playing" id="podcast-now-playing">
+          <span class="podcast-now-speaker" id="podcast-now-speaker"></span>
+          <span class="podcast-now-text" id="podcast-now-text">Press play to start</span>
+        </div>
+        <div class="podcast-controls">
+          <button class="podcast-play" id="podcast-play-btn">
+            <span class="material-icons-outlined" id="podcast-play-icon">play_arrow</span>
+          </button>
+          <div class="podcast-progress-wrap">
+            <div class="podcast-progress" id="podcast-progress"><div class="podcast-progress-fill" id="podcast-progress-fill"></div><div class="podcast-progress-thumb" id="podcast-progress-thumb"></div></div>
+            <span class="podcast-time" id="podcast-line-count">--</span>
+          </div>
+          <button class="podcast-speed" id="podcast-speed-btn" title="Playback speed">1.15x</button>
+        </div>
+        <div class="podcast-status" id="podcast-status">Press play to start generating today's briefing</div>
+        <div class="podcast-transcript" id="podcast-transcript"></div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <span>Data sourced from <a href="https://fred.stlouisfed.org" target="_blank">FRED</a>, Reuters, BBC, Bloomberg &amp; more</span>
+      <span>Updates automatically each day</span>
+    </footer>
+  </div>
+
+  <script src="fred-api.js"></script>
+  <script src="charts.js"></script>
+  <script src="events.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
