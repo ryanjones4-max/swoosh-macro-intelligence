@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const https = require('https');
 const http = require('http');
@@ -9,7 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const FRED_API_KEY = '98a1be06f9fa0a9aefa91e1dbaa888bb';
 const FRED_BASE = 'https://api.stlouisfed.org/fred';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyBYV2K9632Pqf5hL0_wXaPd48zMAl32UuQ';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
