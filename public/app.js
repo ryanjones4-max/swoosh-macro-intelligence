@@ -594,8 +594,9 @@
     if (chartTabs.includes(tab)) {
       const content = dashboard.querySelector('.tab-content');
       if (content) {
-        const header = content.querySelector('.section-header');
-        if (header) header.insertAdjacentHTML('afterend', rangeBarHtml());
+        const firstChart = content.querySelector('.chart-container');
+        const chartGrid = firstChart && firstChart.closest('.grid');
+        if (chartGrid) chartGrid.insertAdjacentHTML('beforebegin', rangeBarHtml());
         initRangeBar();
       }
     }
@@ -3148,11 +3149,29 @@
     let playing = false;
     let currentLine = 0;
     let currentAudio = null;
-    const speeds = [1.15, 1.3, 1.5, 1];
+    const speeds = [1, 1.15, 1.3, 1.5];
     let speedIdx = 0;
     let generating = false;
     let scrubbing = false;
     let prefetchPromise = null;
+    let currentUtterance = null;
+
+    const synth = window.speechSynthesis;
+    let voiceAlex = null;
+    let voiceSam = null;
+
+    function pickVoices() {
+      const all = synth.getVoices().filter(v => v.lang.startsWith('en'));
+      if (!all.length) return;
+      const males = all.filter(v => /male|daniel|james|guy|aaron|david|thomas/i.test(v.name));
+      const females = all.filter(v => /female|samantha|karen|kate|fiona|moira|tessa|zira|susan/i.test(v.name));
+      voiceAlex = males[0] || all[0];
+      voiceSam = females[0] || all[Math.min(1, all.length - 1)] || all[0];
+      if (voiceAlex === voiceSam && all.length > 1) voiceSam = all[1];
+    }
+
+    pickVoices();
+    if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = pickVoices;
 
     const PODCAST_CACHE_KEY = 'podcast_cache_v3';
 
@@ -3219,6 +3238,10 @@
       speedIdx = (speedIdx + 1) % speeds.length;
       speedBtn.textContent = speeds[speedIdx] + 'x';
       if (currentAudio) currentAudio.playbackRate = speeds[speedIdx];
+      if (currentUtterance && synth.speaking) {
+        synth.cancel();
+        playLine(currentLine);
+      }
     });
 
     playBtn.addEventListener('click', () => {
@@ -3230,6 +3253,7 @@
     function seekToLine(idx) {
       if (!podcastLines || idx < 0 || idx >= podcastLines.length) return;
       if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+      stopSpeech();
       currentLine = idx;
       updateProgress();
       highlightLine(idx);
@@ -3255,6 +3279,7 @@
       progressBar.classList.add('scrubbing');
       const wasPlaying = playing;
       if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+      stopSpeech();
       let targetIdx = scrubFromEvent(e);
 
       const moveEvent = isTouch ? 'touchmove' : 'mousemove';
@@ -3360,6 +3385,11 @@
       }).join('');
     }
 
+    function stopSpeech() {
+      if (currentUtterance) { currentUtterance = null; }
+      synth.cancel();
+    }
+
     function playLine(idx) {
       if (idx >= podcastLines.length) { finishPlayback(); return; }
       currentLine = idx;
@@ -3367,15 +3397,35 @@
       highlightLine(idx);
 
       const line = podcastLines[idx];
-      if (!line.audio) { if (playing) playLine(idx + 1); return; }
 
-      const audio = new Audio('data:audio/mpeg;base64,' + line.audio);
-      audio.playbackRate = speeds[speedIdx];
-      currentAudio = audio;
+      if (line.audio) {
+        const audio = new Audio('data:audio/mpeg;base64,' + line.audio);
+        audio.playbackRate = speeds[speedIdx];
+        currentAudio = audio;
+        audio.onended = () => { currentAudio = null; if (playing) playLine(idx + 1); };
+        audio.onerror = () => { currentAudio = null; if (playing) playLine(idx + 1); };
+        audio.play().catch(() => { currentAudio = null; if (playing) playLine(idx + 1); });
+        return;
+      }
 
-      audio.onended = () => { currentAudio = null; if (playing) playLine(idx + 1); };
-      audio.onerror = () => { currentAudio = null; if (playing) playLine(idx + 1); };
-      audio.play().catch(() => { currentAudio = null; if (playing) playLine(idx + 1); });
+      const utt = new SpeechSynthesisUtterance(line.text);
+      utt.rate = speeds[speedIdx];
+      utt.pitch = line.speaker === 'Alex' ? 1.0 : 1.1;
+      utt.voice = line.speaker === 'Alex' ? voiceAlex : voiceSam;
+      currentUtterance = utt;
+
+      utt.onend = () => {
+        currentUtterance = null;
+        if (playing) playLine(idx + 1);
+      };
+      utt.onerror = (e) => {
+        if (e.error === 'canceled') return;
+        currentUtterance = null;
+        if (playing) playLine(idx + 1);
+      };
+
+      synth.cancel();
+      synth.speak(utt);
     }
 
     function resumePlayback() {
@@ -3386,6 +3436,8 @@
 
       if (currentAudio && currentAudio.paused && currentAudio.currentTime > 0) {
         currentAudio.play();
+      } else if (synth.paused) {
+        synth.resume();
       } else {
         playLine(currentLine);
       }
@@ -3396,12 +3448,14 @@
       playIcon.textContent = 'play_arrow';
       statusEl.textContent = 'Paused';
       if (currentAudio) currentAudio.pause();
+      if (synth.speaking && !synth.paused) synth.pause();
     }
 
     function stopPlayback() {
       playing = false;
       playIcon.textContent = 'play_arrow';
       if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+      stopSpeech();
     }
 
     function finishPlayback() {
@@ -3410,6 +3464,7 @@
       statusEl.textContent = 'Finished — tap to replay';
       currentLine = 0;
       currentAudio = null;
+      currentUtterance = null;
       progressFill.style.width = '100%';
       progressThumb.style.left = '100%';
     }

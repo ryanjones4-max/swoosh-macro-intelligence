@@ -2118,7 +2118,11 @@ body.no-ticker .tab-bar {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 28px 8px;
+  padding: 8px 28px;
+  margin: 20px 0 -8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 .chart-range-bar .range-label {
   font-size: 0.7rem;
