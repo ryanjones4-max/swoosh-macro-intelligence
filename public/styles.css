@@ -2119,7 +2119,7 @@ body.no-ticker .tab-bar {
   align-items: center;
   gap: 6px;
   padding: 8px 28px;
-  margin: 20px 0 -8px;
+  margin: 0 0 16px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);

@@ -451,7 +451,7 @@
       'BOPGSTB','M2SL','INDPRO','CAPACITY','PSAVERT','GASREGW','T5YIE','T10YIE',
       'WALCL','DTWEXBGS','BAMLH0A0HYM2','U6RATE','CES0500000003','JTSJOL',
       'PERMIT','CSUSHPISA','MSPUS','MSACSR','PCE','DSPIC96','DGORDER',
-      'DGS5','DGS30','FEDFUNDS','GFDEBTN','AWHMAN',
+      'DGS5','DGS30','FEDFUNDS','GFDEBTN','AWHAEPBS',
       'POPTHM','POPGROW','FERTILITY','BIRTHRATE','LIFEEXP','INFANTMORT',
       'POP65','POP014','WORKAGEPOP','CLF16OV','NETMIG','POPBEA',
       'APPARELCPI','FOOTWEARCPI','MENAPPAREL','FOOTWEARPCE','CLOTHRETAIL',
@@ -594,9 +594,10 @@
     if (chartTabs.includes(tab)) {
       const content = dashboard.querySelector('.tab-content');
       if (content) {
-        const firstChart = content.querySelector('.chart-container');
-        const chartGrid = firstChart && firstChart.closest('.grid');
-        if (chartGrid) chartGrid.insertAdjacentHTML('beforebegin', rangeBarHtml());
+        const summary = content.querySelector('.tab-summary');
+        const header = content.querySelector('.section-header');
+        const anchor = summary || header;
+        if (anchor) anchor.insertAdjacentHTML('afterend', rangeBarHtml());
         initRangeBar();
       }
     }
@@ -1465,7 +1466,7 @@
         { key: 'UNRATE', goodDir: 'down' }, { key: 'PAYEMS', goodDir: 'up' },
         { key: 'ICSA', goodDir: 'down' }, { key: 'CIVPART', goodDir: 'up' },
         { key: 'U6RATE', goodDir: 'down' }, { key: 'CES0500000003', goodDir: 'up' },
-        { key: 'JTSJOL', goodDir: 'up' }, { key: 'AWHMAN', goodDir: 'up' },
+        { key: 'JTSJOL', goodDir: 'up' }, { key: 'AWHAEPBS', goodDir: 'up' },
       ]},
       charts: [
         [
@@ -2147,7 +2148,13 @@
     const iconHtml = icon ? `<span class="material-icons-outlined" style="font-size:16px;color:var(--text-muted)">${icon}</span>` : '';
 
     setTimeout(async () => {
-      const ts = d.raw?.slice().reverse().slice(-30) || [];
+      let ts = d.raw?.slice().reverse() || [];
+      if (chartRangeYears) {
+        const cutoff = yearAgo(chartRangeYears);
+        ts = ts.filter(p => p.date >= cutoff);
+      } else {
+        ts = ts.slice(-30);
+      }
       if (ts.length > 2) {
         const spec2 = FRED.getSpec(key);
         const mapped = ts.map(p => {
@@ -2279,7 +2286,7 @@
     CLOTHINGEMP: 'Employment at clothing and accessories stores (thousands). Secular decline reflects the shift to e-commerce, self-checkout, and leaner retail staffing models. The pace of job losses indicates the health of physical retail.',
     FEDFUNDS: 'The federal funds rate target set by the FOMC at each meeting. It is the most powerful lever in US economic policy, influencing borrowing costs for consumers and businesses across the entire economy.',
     U6RATE: 'The U-6 rate is the broadest measure of labor underutilization, including unemployed, marginally attached, and part-time-for-economic-reasons workers. It captures hidden slack the headline unemployment rate misses.',
-    AWHMAN: 'Average weekly hours in manufacturing measures the length of the production workweek. It is a leading indicator — employers adjust hours before headcount, so declining hours often precede layoffs.',
+    AWHAEPBS: 'Average weekly hours in professional and business services measures workweek length in one of the largest and highest-paying service sectors. It is a leading indicator — employers adjust hours before headcount, so declining hours often signal softening white-collar demand.',
     MSPUS: 'The median sales price of existing homes sold in the US. Unlike Case-Shiller, this is not repeat-sale adjusted, so it can be influenced by the mix of homes selling (e.g., more luxury vs starter homes).',
     PCE: 'Personal consumption expenditures represent total consumer spending on goods and services. PCE is the largest component of GDP (~68%) and the single most important driver of US economic growth.',
     DSPIC96: 'Real disposable personal income is income after taxes, adjusted for inflation. It measures the actual purchasing power available to consumers and is the fundamental constraint on sustainable spending growth.',
@@ -2360,7 +2367,7 @@
       CLOTHINGEMP: () => dir === 'down' ? `At ${fmt}${chg}, clothing store employment continues to decline as e-commerce and automation reshape retail staffing.` : `At ${fmt}${chg}, employment is stabilizing, suggesting the physical retail channel has found a floor.`,
       YOUTH1624UE: () => v < 9 ? `At ${fmt}, youth unemployment is healthy — supporting strong discretionary spending among the prime fashion demographic.` : `At ${fmt}, youth unemployment is elevated, which may constrain apparel and lifestyle spending for the key 16-24 cohort.`,
       U6RATE: () => v > 8 ? `At ${fmt}, broad underemployment is elevated — many workers are underemployed or have given up looking, masking true labor market weakness.` : `At ${fmt}, even the broadest measure of underemployment is contained.`,
-      AWHMAN: () => v < 40 ? `At ${fmt} hours, the manufacturing workweek is below average, a leading indicator that overtime is being cut — often a precursor to layoffs.` : `At ${fmt} hours, the workweek is at or above normal levels, suggesting strong production demand.`,
+      AWHAEPBS: () => v < 36 ? `At ${fmt} hours, the professional & business services workweek is below average, a leading indicator of softening white-collar labor demand.` : `At ${fmt} hours, the workweek is healthy, suggesting steady demand for professional and business services.`,
       MSPUS: () => dir === 'up' ? `At ${fmt}${chg}, median home prices are rising, boosting existing homeowner wealth but worsening affordability for first-time buyers.` : `At ${fmt}${chg}, prices are easing — improving affordability but reducing home equity for existing owners.`,
       PCE: () => dir === 'up' ? `At ${fmt}${chg}, consumer spending is growing — the engine that drives ~68% of GDP.` : `At ${fmt}${chg}, consumer spending is weakening, which directly threatens GDP growth given its dominant share.`,
       DSPIC96: () => dir === 'up' ? `At ${fmt}${chg}, real income is rising — consumers have more purchasing power, which sustainably supports spending growth.` : `At ${fmt}${chg}, real income is stagnant or declining — any continued spending is being financed by savings drawdown or credit.`,

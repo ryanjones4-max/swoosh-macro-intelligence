@@ -11,7 +11,7 @@ const FRED = (() => {
     INDPRO: S('INDPRO','Industrial Production','idx',1,'m'), CAPACITY: S('TCU','Capacity Utilization','%',1,'m'),
     UNRATE: S('UNRATE','Unemployment Rate','%',1,'m'), PAYEMS: S('PAYEMS','Nonfarm Payrolls','K',0,'m'),
     ICSA: S('ICSA','Initial Jobless Claims','',0,'w'), CIVPART: S('CIVPART','Labor Force Participation','%',1,'m'),
-    U6RATE: S('U6RATE','U-6 Underemployment','%',1,'m'), AWHMAN: S('AWHMAN','Avg Weekly Hours (Mfg)','hrs',1,'m'),
+    U6RATE: S('U6RATE','U-6 Underemployment','%',1,'m'), AWHAEPBS: S('AWHAEPBS','Avg Weekly Hours (Prof & Biz Svcs)','hrs',1,'m'),
     CES0500000003: S('CES0500000003','Avg Hourly Earnings','$',2,'m'), JTSJOL: S('JTSJOL','Job Openings (JOLTS)','K',0,'m'),
     CPIAUCSL: S('CPIAUCSL','CPI (All Urban)','idx',1,'m'),
     CPIYOY: S('CPIAUCNS','CPI Year-over-Year','%',1,'m',{calcYoY:true}),
