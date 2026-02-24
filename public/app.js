@@ -266,6 +266,33 @@
   const lpChgFmt = (k) => { const p = livePrices?.[k]; if (!p || p.error) return ''; const s = p.change >= 0 ? '+' : ''; return `${s}${p.change} (${s}${p.changePct}%)`; };
   const fmtToday = () => new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
+  let chartRangeYears = null;
+  const RANGE_OPTIONS = [1, 2, 3, 5, 10];
+
+  function chartRange(defaultYears) {
+    return chartRangeYears || defaultYears;
+  }
+
+  function rangeBarHtml() {
+    return `<div class="chart-range-bar" id="chart-range-bar">
+      <span class="range-label"><span class="material-icons-outlined" style="font-size:14px;vertical-align:-2px">date_range</span> Chart Range</span>
+      <button class="chart-range-btn${chartRangeYears === null ? ' active' : ''}" data-range="">Default</button>
+      ${RANGE_OPTIONS.map(y => `<button class="chart-range-btn${chartRangeYears === y ? ' active' : ''}" data-range="${y}">${y}Y</button>`).join('')}
+    </div>`;
+  }
+
+  function initRangeBar() {
+    const bar = document.getElementById('chart-range-bar');
+    if (!bar) return;
+    bar.addEventListener('click', e => {
+      const btn = e.target.closest('.chart-range-btn');
+      if (!btn) return;
+      const val = btn.dataset.range;
+      chartRangeYears = val === '' ? null : parseInt(val);
+      renderTab(currentTab);
+    });
+  }
+
   const INSIGHTS_VER = 'v9';
   const ALL_SECTIONS = [
     'us_economy', 'global_daily', 'global_regional', 'global_industry',
@@ -562,6 +589,16 @@
     };
     const fallback = dashboardScope === 'industry' ? renderIndustryTrends : dashboardScope === 'global' ? renderGlobalDailyRead : renderDailyRead;
     (renderers[tab] || fallback)();
+    const chartTabs = ['overview','growth','labor','inflation','rates','housing','consumer','markets','population','youth',
+      'g-overview','g-commodities','g-fx'];
+    if (chartTabs.includes(tab)) {
+      const content = dashboard.querySelector('.tab-content');
+      if (content) {
+        const header = content.querySelector('.section-header');
+        if (header) header.insertAdjacentHTML('afterend', rangeBarHtml());
+        initRangeBar();
+      }
+    }
     restoreDrState(drState);
     trackDrToggles();
   }
@@ -954,10 +991,10 @@
 
   async function loadGlobalOverviewCharts() {
     const [oil, gold, dxy, sp] = await Promise.all([
-      FRED.getTimeSeries('DCOILWTICO', { startDate: yearAgo(2) }),
-      fetchGoldHistory(2),
-      FRED.getTimeSeries('DTWEXBGS', { startDate: yearAgo(2) }),
-      FRED.getTimeSeries('SP500', { startDate: yearAgo(2) }),
+      FRED.getTimeSeries('DCOILWTICO', { startDate: yearAgo(chartRange(2)) }),
+      fetchGoldHistory(chartRange(2)),
+      FRED.getTimeSeries('DTWEXBGS', { startDate: yearAgo(chartRange(2)) }),
+      FRED.getTimeSeries('SP500', { startDate: yearAgo(chartRange(2)) }),
     ]);
     Charts.createLine('g-oil-chart', oil, { color: 'orange', label: 'WTI Crude Oil' });
     Charts.createLine('g-gold-chart', gold, { color: 'yellow', label: 'Gold $/oz' });
@@ -1060,11 +1097,11 @@
 
   async function loadCommodityCharts() {
     const [wti, brent, gold, gas, copper] = await Promise.all([
-      FRED.getTimeSeries('DCOILWTICO', { startDate: yearAgo(3) }),
-      FRED.getTimeSeries('DCOILBRENTEU', { startDate: yearAgo(3) }),
+      FRED.getTimeSeries('DCOILWTICO', { startDate: yearAgo(chartRange(3)) }),
+      FRED.getTimeSeries('DCOILBRENTEU', { startDate: yearAgo(chartRange(3)) }),
       fetchGoldHistory(3),
-      FRED.getTimeSeries('DHHNGSP', { startDate: yearAgo(3) }),
-      FRED.getTimeSeries('PCOPPUSDM', { startDate: yearAgo(5) }),
+      FRED.getTimeSeries('DHHNGSP', { startDate: yearAgo(chartRange(3)) }),
+      FRED.getTimeSeries('PCOPPUSDM', { startDate: yearAgo(chartRange(5)) }),
     ]);
     Charts.createLine('g-oil-compare', [wti, brent], { colors: ['orange', 'red'], labels: ['WTI', 'Brent'], showLegend: true, noFill: true });
     Charts.createLine('g-gold-hist', gold, { color: 'yellow', label: 'Gold $/oz' });
@@ -1156,12 +1193,12 @@
 
   async function loadFXCharts() {
     const [dxy, eur, jpy, gbp, cny, mxn] = await Promise.all([
-      FRED.getTimeSeries('DTWEXBGS', { startDate: yearAgo(2) }),
-      FRED.getTimeSeries('DEXUSEU', { startDate: yearAgo(2) }),
-      FRED.getTimeSeries('DEXJPUS', { startDate: yearAgo(2) }),
-      FRED.getTimeSeries('DEXUSUK', { startDate: yearAgo(2) }),
-      FRED.getTimeSeries('DEXCHUS', { startDate: yearAgo(2) }),
-      FRED.getTimeSeries('DEXMXUS', { startDate: yearAgo(2) }),
+      FRED.getTimeSeries('DTWEXBGS', { startDate: yearAgo(chartRange(2)) }),
+      FRED.getTimeSeries('DEXUSEU', { startDate: yearAgo(chartRange(2)) }),
+      FRED.getTimeSeries('DEXJPUS', { startDate: yearAgo(chartRange(2)) }),
+      FRED.getTimeSeries('DEXUSUK', { startDate: yearAgo(chartRange(2)) }),
+      FRED.getTimeSeries('DEXCHUS', { startDate: yearAgo(chartRange(2)) }),
+      FRED.getTimeSeries('DEXMXUS', { startDate: yearAgo(chartRange(2)) }),
     ]);
     Charts.createLine('g-fx-dxy', dxy, { color: 'blue', label: 'USD Index' });
     Charts.createLine('g-fx-eur', eur, { color: 'green', label: 'EUR/USD' });
@@ -1323,12 +1360,12 @@
 
   async function loadOverviewCharts() {
     const [sp500, dff, dgs10, dgs2, dgs5, dgs30] = await Promise.all([
-      FRED.getTimeSeries('SP500', { startDate: yearAgo(2) }),
-      FRED.getTimeSeries('DFF', { startDate: yearAgo(5) }),
-      FRED.getTimeSeries('DGS10', { startDate: yearAgo(5) }),
-      FRED.getTimeSeries('DGS2', { startDate: yearAgo(1) }),
-      FRED.getTimeSeries('DGS5', { startDate: yearAgo(1) }),
-      FRED.getTimeSeries('DGS30', { startDate: yearAgo(1) }),
+      FRED.getTimeSeries('SP500', { startDate: yearAgo(chartRange(2)) }),
+      FRED.getTimeSeries('DFF', { startDate: yearAgo(chartRange(5)) }),
+      FRED.getTimeSeries('DGS10', { startDate: yearAgo(chartRange(5)) }),
+      FRED.getTimeSeries('DGS2', { startDate: yearAgo(chartRange(1)) }),
+      FRED.getTimeSeries('DGS5', { startDate: yearAgo(chartRange(1)) }),
+      FRED.getTimeSeries('DGS30', { startDate: yearAgo(chartRange(1)) }),
     ]);
 
     Charts.createLine('overview-sp500', sp500, { color: 'green', label: 'S&P 500' });
@@ -1571,8 +1608,8 @@
   async function loadTabCharts(chartRows) {
     const all = chartRows.flat();
     const fetches = all.map(c => c.keys
-      ? Promise.all(c.keys.map(k => FRED.getTimeSeries(k, { startDate: yearAgo(c.years || 5) })))
-      : FRED.getTimeSeries(c.key, { startDate: yearAgo(c.years || 5) })
+      ? Promise.all(c.keys.map(k => FRED.getTimeSeries(k, { startDate: yearAgo(chartRange(c.years || 5)) })))
+      : FRED.getTimeSeries(c.key, { startDate: yearAgo(chartRange(c.years || 5)) })
     );
     const results = await Promise.all(fetches);
     all.forEach((c, i) => {
@@ -1691,16 +1728,16 @@
 
   async function loadPopulationCharts() {
     const [total, growth, migration, fertility, lifeexp, birthrate, pop65, pop014, working, clf] = await Promise.all([
-      FRED.getTimeSeries('POPTHM', { startDate: yearAgo(30) }),
-      FRED.getTimeSeries('POPGROW', { startDate: yearAgo(50) }),
-      FRED.getTimeSeries('NETMIG', { startDate: yearAgo(50) }),
-      FRED.getTimeSeries('FERTILITY', { startDate: yearAgo(50) }),
-      FRED.getTimeSeries('LIFEEXP', { startDate: yearAgo(50) }),
-      FRED.getTimeSeries('BIRTHRATE', { startDate: yearAgo(50) }),
-      FRED.getTimeSeries('POP65', { startDate: yearAgo(50) }),
-      FRED.getTimeSeries('POP014', { startDate: yearAgo(50) }),
-      FRED.getTimeSeries('WORKAGEPOP', { startDate: yearAgo(20) }),
-      FRED.getTimeSeries('CLF16OV', { startDate: yearAgo(20) }),
+      FRED.getTimeSeries('POPTHM', { startDate: yearAgo(chartRange(30)) }),
+      FRED.getTimeSeries('POPGROW', { startDate: yearAgo(chartRange(50)) }),
+      FRED.getTimeSeries('NETMIG', { startDate: yearAgo(chartRange(50)) }),
+      FRED.getTimeSeries('FERTILITY', { startDate: yearAgo(chartRange(50)) }),
+      FRED.getTimeSeries('LIFEEXP', { startDate: yearAgo(chartRange(50)) }),
+      FRED.getTimeSeries('BIRTHRATE', { startDate: yearAgo(chartRange(50)) }),
+      FRED.getTimeSeries('POP65', { startDate: yearAgo(chartRange(50)) }),
+      FRED.getTimeSeries('POP014', { startDate: yearAgo(chartRange(50)) }),
+      FRED.getTimeSeries('WORKAGEPOP', { startDate: yearAgo(chartRange(20)) }),
+      FRED.getTimeSeries('CLF16OV', { startDate: yearAgo(chartRange(20)) }),
     ]);
 
     Charts.createLine('pop-total', total, { color: 'blue', label: 'Population (M)' });
@@ -1728,7 +1765,7 @@
       });
     }
 
-    Charts.createLine('pop-infant', lifeexp.length ? await FRED.getTimeSeries('INFANTMORT', { startDate: yearAgo(50) }) : [], { color: 'red' });
+    Charts.createLine('pop-infant', lifeexp.length ? await FRED.getTimeSeries('INFANTMORT', { startDate: yearAgo(chartRange(50)) }) : [], { color: 'red' });
   }
 
   // ── YOUTH & APPAREL ─────────────────────────────────────────
@@ -1955,19 +1992,19 @@
 
   async function loadYouthCharts() {
     const [shoeSales, clothSales, footCpi, appCpi, footPpi, ecom, revCredit, ccBal, teenUe, youngUe, teenEmp, youngEmp, clothEmp] = await Promise.all([
-      FRED.getTimeSeries('SHOERETAIL', { startDate: yearAgo(10) }),
-      FRED.getTimeSeries('CLOTHRETAIL', { startDate: yearAgo(10) }),
-      FRED.getTimeSeries('FOOTWEARCPI', { startDate: yearAgo(15) }),
-      FRED.getTimeSeries('APPARELCPI', { startDate: yearAgo(15) }),
-      FRED.getTimeSeries('FOOTWEARPPI', { startDate: yearAgo(10) }),
-      FRED.getTimeSeries('ECOMMPCT', { startDate: yearAgo(15) }),
-      FRED.getTimeSeries('REVOLVCREDIT', { startDate: yearAgo(10) }),
-      FRED.getTimeSeries('CCBALANCE', { startDate: yearAgo(5) }),
-      FRED.getTimeSeries('YOUTH1619UE', { startDate: yearAgo(10) }),
-      FRED.getTimeSeries('YOUTH2024UE', { startDate: yearAgo(10) }),
-      FRED.getTimeSeries('YOUTH1619EMP', { startDate: yearAgo(10) }),
-      FRED.getTimeSeries('YOUTH2024EMP', { startDate: yearAgo(10) }),
-      FRED.getTimeSeries('CLOTHINGEMP', { startDate: yearAgo(15) }),
+      FRED.getTimeSeries('SHOERETAIL', { startDate: yearAgo(chartRange(10)) }),
+      FRED.getTimeSeries('CLOTHRETAIL', { startDate: yearAgo(chartRange(10)) }),
+      FRED.getTimeSeries('FOOTWEARCPI', { startDate: yearAgo(chartRange(15)) }),
+      FRED.getTimeSeries('APPARELCPI', { startDate: yearAgo(chartRange(15)) }),
+      FRED.getTimeSeries('FOOTWEARPPI', { startDate: yearAgo(chartRange(10)) }),
+      FRED.getTimeSeries('ECOMMPCT', { startDate: yearAgo(chartRange(15)) }),
+      FRED.getTimeSeries('REVOLVCREDIT', { startDate: yearAgo(chartRange(10)) }),
+      FRED.getTimeSeries('CCBALANCE', { startDate: yearAgo(chartRange(5)) }),
+      FRED.getTimeSeries('YOUTH1619UE', { startDate: yearAgo(chartRange(10)) }),
+      FRED.getTimeSeries('YOUTH2024UE', { startDate: yearAgo(chartRange(10)) }),
+      FRED.getTimeSeries('YOUTH1619EMP', { startDate: yearAgo(chartRange(10)) }),
+      FRED.getTimeSeries('YOUTH2024EMP', { startDate: yearAgo(chartRange(10)) }),
+      FRED.getTimeSeries('CLOTHINGEMP', { startDate: yearAgo(chartRange(15)) }),
     ]);
 
     Charts.createLine('youth-shoe-sales', shoeSales, { color: 'orange' });
